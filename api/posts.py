@@ -1,4 +1,4 @@
-from flask import jsonify, request, g, abort
+from flask import jsonify, request, g, abort, Response
 
 from api import api
 from db.shared import db
@@ -8,6 +8,7 @@ from db.models.post import Post
 from db.utils import row_to_dict
 from middlewares import auth_required
 
+VALID_SORTS = ["id","reads","likes","popularity"]
 
 @api.post("/posts")
 @auth_required
@@ -39,11 +40,55 @@ def posts():
     return row_to_dict(post), 200
 
 @api.get('/posts')
+@auth_required
 def get_posts():
     """
+    Accepts a GET request. The query string specifies which criteria to consider when returning posts.
+    Returns posts and their content as a JSON payload, with HTTPResponseCode.
     
+    :param authorIds: (str) Comma separated list of integers, as a string e.g. "1,5"
+    :param sortBy: (str) field name to sort by. Options are "id, reads, likes, popularity. Default is "id".
+    :param direction: (str) Sorting direction of results. Options are "asc" and "desc". Default is "asc".
+    :returns: JSON object in the format {"posts":{"id":(int),"likes":(int),"popularity":(float),"reads":(int),"tags":[(str),(str),[...]],"text":(str)},[...]}, HTTPResponseCode
+    :returns: JSON object in the format {"error":"<error message"}
     """
-    data = request.get_json(force=True)
+    user = g.get("user")
+    if user is None:
+        return abort(401)
+
+    args = request.args
+
+    authorIds = args.get("authorIds")
+    if authorIds is None:
+        return jsonify({"error":"Must specify at least 1 author Id as a positive integer."}),400
+    if len(authorIds) == 0:
+        return jsonify({"error":"Must provide at least one authorId to search for."}),400
+    try:
+        authorIds = [int(x) for x in args.get("authorIds").split(",")] #split arg into an array of ints.
+    except ValueError:
+        return jsonify({"error":"All ids passed must be a positive integer. Integers must be separated by a comma. [,]"}),400
+
+    print(f"authorIds: {authorIds}")
+
+    sortBy = args.get("sortBy")
+    if sortBy is None:
+        sortBy = "id"
+    if sortBy not in VALID_SORTS:
+        return jsonify({"error":f'Invalid sortBy passed. Must be one of {VALID_SORTS}'}),400
+
+    print(f"Sort by: {sortBy}")
+
+    direction = args.get("direction")  
+    if direction is None:
+        direction = "asc"
+    if direction not in ["asc","desc"]:
+        return jsonify({"error":'Invalid sort order specified. Must be one of ["asc","desc"]'}),400
     
-    
-    #return jsonify(data.get("text"))
+    print(f"Direction: {direction}")
+
+    return Response(status=200)
+
+@api.patch('/posts')
+@auth_required
+def update_posts():
+    pass
