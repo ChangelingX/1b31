@@ -3,3 +3,7 @@ env/
 *.db
 **/.pytest_cache/
 .DS_Store
+.devcontainer/
+.github/
+.vscode
+database.db

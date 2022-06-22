@@ -37,3 +37,13 @@ def posts():
     db.session.commit()
 
     return row_to_dict(post), 200
+
+@api.get('/posts')
+def get_posts():
+    """
+    
+    """
+    data = request.get_json(force=True)
+    
+    
+    #return jsonify(data.get("text"))
