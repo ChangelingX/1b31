@@ -126,7 +126,7 @@ class TestAuthorIds:
             "authorIds": "4,5"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_no_match_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_no_match_expected_result, sort_keys=True)
 
     def test_get_posts_authorIds_multiple_ids_one_match_no_shared_authors(self,client):
         token = make_token(1)
@@ -134,16 +134,16 @@ class TestAuthorIds:
             "authorIds": "1,4"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_one_match_no_shared_authors_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result, sort_keys=True)
 
     # can't be tested with data set provided.
-    def test_get_posts_authorIds_multiple_ids_one_match_shared_authors(self,client):
-        token = make_token(1)
-        query_params = {
-            "authorIds": "4,5"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_one_match_shared_authors_expected_result, sort_keys=True)
+    # def test_get_posts_authorIds_multiple_ids_one_match_shared_authors(self,client):
+    #     token = make_token(1)
+    #     query_params = {
+    #         "authorIds": "4,5"
+    #     }
+    #     response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+    #     assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_one_match_shared_authors_expected_result, sort_keys=True)
 
     def test_get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors(self,client):
         token = make_token(1)
@@ -151,7 +151,7 @@ class TestAuthorIds:
             "authorIds": "1,3"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_multiple_matches_no_shared_authors_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result , sort_keys=True)
 
     def test_get_posts_authorIds_multiple_ids_multiple_matches_shared_authors(self,client):
         token = make_token(1)
@@ -159,15 +159,29 @@ class TestAuthorIds:
             "authorIds": "1,2"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_multiple_matches_shared_authors_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result, sort_keys=True)
 
-    get_posts_authorIds_one_id_no_match = {}
-    get_posts_authorIds_one_id_one_match = {}
-    get_posts_authorIds_one_id_multiple_match = {}
-    get_posts_authorIds_multiple_ids_no_match = {}
-    get_posts_authorIds_multiple_ids_one_match = {}
-    get_posts_authorIds_multiple_ids_multiple_match_no_shared_authors = {}
-    get_posts_authorIds_multiple_ids_multiple_match_shared_authors = {}
+    get_posts_authorIds_one_id_no_match_expected_result = {
+        # id 4
+    }
+    get_posts_authorIds_one_id_one_match_expected_result = {
+        # id 1
+    }
+    get_posts_authorIds_one_id_multiple_match_expected_result = {
+        # id 2
+    }
+    get_posts_authorIds_multiple_ids_no_match_expected_result = {
+        # id 4,5
+    }
+    get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result = {
+        # id 1,4
+    }
+    get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result = {
+        # id 1,3
+    }
+    get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result = {
+        # id 1,2
+    }
 
     get_posts_authorIds_not_specified_expected_result = {
         "error":"Must specify at least 1 author Id as a positive integer."
@@ -245,6 +259,8 @@ class TestSortBy:
         """
         pass
 
+    
+    # sortBy mock data
     get_posts_sortBy_not_passed_expected_result = {
         "posts": [
             {
@@ -273,14 +289,11 @@ class TestSortBy:
             },
         ],
     }
-
-    # sortBy mock data
     get_posts_sortBy_blank_expected_result = get_posts_sortBy_not_passed_expected_result #same outcome
     get_posts_sortBy_id_expected_result = get_posts_sortBy_not_passed_expected_result #same outcome
     get_posts_sortBy_invalid_expected_results = {
         "error":'Invalid sortBy passed. Must be one of ["id","reads","likes","popularity"]'
     }
-
     get_posts_sortBy_reads_expected_result = {
         "posts": [
             {
@@ -309,7 +322,6 @@ class TestSortBy:
             }
         ],
     }
-
     get_posts_sortBy_likes_expected_result = {
         "posts": [
             {
@@ -338,7 +350,6 @@ class TestSortBy:
             }
         ],
     }
-
     #secondary sort by ID
     get_posts_sortBy_popularity_expected_result = {
         "posts": [
