@@ -52,12 +52,17 @@ def get_posts():
     :returns: JSON object in the format {"posts":{"id":(int),"likes":(int),"popularity":(float),"reads":(int),"tags":[(str),(str),[...]],"text":(str)},[...]}, HTTPResponseCode
     :returns: JSON object in the format {"error":"<error message"}
     """
+    # check for validation
     user = g.get("user")
     if user is None:
         return abort(401)
 
     args = request.args
 
+    # Checks that authorIds, sortBy, direction all conform to requirements. 
+    # Returns 400 error and JSON error message otherwise.
+
+    # confirm authorIds exists and contains a list of positive integers separated by commas.
     authorIds = args.get("authorIds")
     if authorIds is None:
         return jsonify({"error":"Must specify at least 1 author Id as a positive integer."}),400
@@ -70,6 +75,7 @@ def get_posts():
 
     print(f"authorIds: {authorIds}")
 
+    #default to "id", error if passed value not valid.
     sortBy = args.get("sortBy")
     if sortBy is None:
         sortBy = "id"
@@ -78,6 +84,7 @@ def get_posts():
 
     print(f"Sort by: {sortBy}")
 
+    #default to ascending, error if passed value not valid.
     direction = args.get("direction")  
     if direction is None:
         direction = "asc"
