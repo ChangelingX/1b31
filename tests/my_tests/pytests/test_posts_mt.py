@@ -222,6 +222,14 @@ class TestAuthorIds:
                 "likes": 10,
                 "reads": 32,
                 "popularity": 0.7,
+            },
+            {
+                "id":4,
+                "text":"This is post 4",
+                "likes":50,
+                "reads":300,
+                "tags":["vacation", "spa"],
+                "popularity":0.4
             }
         ],
     }

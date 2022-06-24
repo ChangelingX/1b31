@@ -91,6 +91,8 @@ def get_posts():
     direction = args.get("direction")  
     if direction is None:
         direction = "asc"
+    if len(direction) == 0:
+        direction = "asc"
     if direction not in ["asc","desc"]:
         return jsonify({"error":'Invalid sort order specified. Must be one of ["asc","desc"]'}),400
     
@@ -104,6 +106,20 @@ def get_posts():
 
     #sort matching posts using specified sort criteria and direction
     def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
+
+        def compare(this, that, criteria):
+            if getattr(this, criteria) < getattr(that,criteria):
+                return -1
+            if getattr(this, criteria) > getattr(that, criteria):
+                return 1
+            if getattr(this,criteria) == getattr(that,criteria):
+                if getattr(this,"id") < getattr(that,"id"):
+                    return -1
+                if getattr(this,"id") > getattr(that,"id"):
+                    return 1
+                if getattr(this,"id") == getattr(that,"id"):
+                    return 0
+
         # adapted from 
         # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
         def quicksort(posts_to_sort):
@@ -115,16 +131,19 @@ def get_posts():
             pivot = posts_to_sort[randint(0, len(posts_to_sort) - 1)]
 
             for item in posts_to_sort:
-                if getattr(item, criteria) < getattr(pivot, criteria):
+                if compare(item, pivot, criteria) < 0:
                     low.append(item)
-                if getattr(item, criteria) == getattr(pivot, criteria):
+                if compare(item, pivot, criteria) == 0:
                     same.append(item)
-                if getattr(item, criteria) > getattr(pivot, criteria):
+                if compare(item, pivot, criteria) > 0:
                     high.append(item)
 
             return quicksort(low) + same + quicksort(high)
         
         return quicksort(posts_to_sort)
+
+    if len(matched_posts) == 0:
+        return jsonify({"no results":"There were no posts matching the criteria submitted."})
         
     sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
 
