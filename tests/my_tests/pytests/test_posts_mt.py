@@ -17,7 +17,6 @@ class TestAuthentication:
         """
         token = make_token(2)
         query_params = {"authorIds":"2"}
-        print("attempting auth test")
         response = client.get(
             "/api/posts", headers={"x-access-token": token}, query_string=query_params
         )
@@ -162,35 +161,104 @@ class TestAuthorIds:
         assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result, sort_keys=True)
 
     get_posts_authorIds_one_id_no_match_expected_result = {
-        # id 4
+        "no results":"There were no posts matching the criteria submitted."
     }
     get_posts_authorIds_one_id_one_match_expected_result = {
-        # id 1
+        "posts": [
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+        ],
     }
     get_posts_authorIds_one_id_multiple_match_expected_result = {
-        # id 2
+        "posts": [
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+            {
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
+                "popularity": 0.7,
+            },
+            {
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
+                "popularity": 0.7,
+            },
+        ],
     }
-    get_posts_authorIds_multiple_ids_no_match_expected_result = {
-        # id 4,5
-    }
-    get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result = {
-        # id 1,4
-    }
+    get_posts_authorIds_multiple_ids_no_match_expected_result = get_posts_authorIds_one_id_no_match_expected_result
+    get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result = get_posts_authorIds_one_id_one_match_expected_result
     get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result = {
-        # id 1,3
+        "posts": [
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+            {
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
+                "popularity": 0.7,
+            }
+        ],
     }
     get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result = {
-        # id 1,2
+        "posts": [
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+            {
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
+                "popularity": 0.7,
+            },
+            {
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
+                "popularity": 0.7,
+            },
+        ],
     }
-
     get_posts_authorIds_not_specified_expected_result = {
         "error":"Must specify at least 1 author Id as a positive integer."
     }
-
     get_posts_authorIds_blank_expected_result = {
         "error":"Must provide at least one authorId to search for."
     }
-
     get_posts_authorIds_not_valid_format_expected_result = {
         "error":"All ids passed must be a positive integer. Integers must be separated by a comma. [,]"
     }
@@ -233,33 +301,62 @@ class TestSortBy:
         """
         should return a 400 error.
         """
-        pass
+        token = make_token(1)
+        query_params = {
+            "authorIds": "2",
+            "sortBy":"invalid"
+        }
+        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_invalid_expected_results, sort_keys=True)
 
     def get_posts_sortBy_id(self,client):
         """
         should return posts sorted by ID
         """
-        pass
+        token = make_token(1)
+        query_params = {
+            "authorIds": "2",
+            "sortBy":"id"
+        }
+        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_id_expected_results, sort_keys=True)
 
     def get_posts_sortBy_reads(self,client):
         """
         should return posts sorted by reads (views)
         """
-        pass
+        token = make_token(1)
+        query_params = {
+            "authorIds": "2",
+            "sortBy":"reads"
+        }
+        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_reads_expected_results, sort_keys=True)
 
     def get_posts_sortBy_likes(self,client):
         """
         should return posts sorted by likes
         """
-        pass
+        token = make_token(1)
+        query_params = {
+            "authorIds": "2",
+            "sortBy":"likes"
+        }
+        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_likes_expected_results, sort_keys=True)
 
     def get_posts_sortBy_popularity(self,client):
         """
         should return posts sorted by popularity
         """
-        pass
+        token = make_token(1)
+        query_params = {
+            "authorIds": "2",
+            "sortBy":"popularity"
+        }
+        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_popularity_expected_results, sort_keys=True)
 
-    
     # sortBy mock data
     get_posts_sortBy_not_passed_expected_result = {
         "posts": [
@@ -297,12 +394,12 @@ class TestSortBy:
     get_posts_sortBy_reads_expected_result = {
         "posts": [
             {
-                "tags": ["travel", "hotels"],
-                "id": 2,
-                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
-                "likes": 104,
-                "reads": 200,
-                "popularity": 0.7,
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
             },
             {
                 "tags": ["travel", "airbnb", "vacation"],
@@ -313,23 +410,23 @@ class TestSortBy:
                 "popularity": 0.7,
             },
             {
-                "tags": ["food", "recipes", "baking"],
-                "id": 1,
-                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
-                "likes": 12,
-                "reads": 5,
-                "popularity": 0.19,
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
+                "popularity": 0.7,
             }
         ],
     }
     get_posts_sortBy_likes_expected_result = {
         "posts": [
             {
-                "tags": ["travel", "hotels"],
-                "id": 2,
-                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
-                "likes": 104,
-                "reads": 200,
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
                 "popularity": 0.7,
             },
             {
@@ -341,11 +438,11 @@ class TestSortBy:
                 "popularity": 0.19,
             },
             {
-                "tags": ["travel", "airbnb", "vacation"],
-                "id": 3,
-                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
-                "likes": 10,
-                "reads": 32,
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
                 "popularity": 0.7,
             }
         ],
@@ -354,6 +451,14 @@ class TestSortBy:
     get_posts_sortBy_popularity_expected_result = {
         "posts": [
             {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+            {
                 "tags": ["travel", "hotels"],
                 "id": 2,
                 "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
@@ -368,14 +473,6 @@ class TestSortBy:
                 "likes": 10,
                 "reads": 32,
                 "popularity": 0.7,
-            },
-            {
-                "tags": ["food", "recipes", "baking"],
-                "id": 1,
-                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
-                "likes": 12,
-                "reads": 5,
-                "popularity": 0.19,
             }
         ],
     }
@@ -438,16 +535,63 @@ class TestDirection:
 
     # default case
     get_posts_direction_asc_expected_result = {
-        #sorted by id ascending
+        "posts": [
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            },
+            {
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
+                "popularity": 0.7,
+            },
+            {
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
+                "popularity": 0.7,
+            },
+        ],
     }
-
     get_posts_direction_not_passed_expected_result = get_posts_direction_asc_expected_result
     get_posts_direction_blank_expected_result = get_posts_direction_asc_expected_result
-    
     get_posts_direction_invalid_option_expected_result = {
         "error":'Invalid sort order specified. Must be one of ["asc","desc"]'
     }
-
     get_posts_direction_desc_expected_result = {
-        # sorted by id descending
+        "posts": [
+            {
+                "tags": ["travel", "airbnb", "vacation"],
+                "id": 3,
+                "text": "Voluptate consequat minim commodo nisi minim ut. Exercitation incididunt eiusmod qui duis enim sunt dolor sit nisi laboris qui enim mollit. Proident pariatur elit est elit consectetur. Velit anim eu culpa adipisicing esse consequat magna. Id do aliquip pariatur laboris consequat cupidatat voluptate incididunt sint ea.",
+                "likes": 10,
+                "reads": 32,
+                "popularity": 0.7,
+            },
+            {
+                "tags": ["travel", "hotels"],
+                "id": 2,
+                "text": "Ea cillum incididunt consequat ullamco nisi aute labore cupidatat exercitation et sunt nostrud. Occaecat elit tempor ex anim non nulla sit culpa ipsum aliquip. In amet in Lorem ut enim. Consectetur ea officia reprehenderit pariatur magna eiusmod voluptate. Nostrud labore id adipisicing culpa sunt veniam qui deserunt magna sint mollit. Cillum irure pariatur occaecat amet reprehenderit nisi qui proident aliqua.",
+                "likes": 104,
+                "reads": 200,
+                "popularity": 0.7,
+            },
+            {
+                "tags": ["food", "recipes", "baking"],
+                "id": 1,
+                "text": "Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.",
+                "likes": 12,
+                "reads": 5,
+                "popularity": 0.19,
+            }
+        ],
     }
