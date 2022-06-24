@@ -1,4 +1,5 @@
 from flask import jsonify, request, g, abort, Response
+from random import randint
 
 from api import api
 from db.shared import db
@@ -8,7 +9,7 @@ from db.models.post import Post
 from db.utils import row_to_dict
 from middlewares import auth_required
 
-VALID_SORTS = ["id","reads","likes","popularity"]
+VALID_SORTS = ['id','reads','likes','popularity']
 
 @api.post("/posts")
 @auth_required
@@ -79,6 +80,8 @@ def get_posts():
     sortBy = args.get("sortBy")
     if sortBy is None:
         sortBy = "id"
+    if len(sortBy) == 0:
+        sortBy = "id"
     if sortBy not in VALID_SORTS:
         return jsonify({"error":f'Invalid sortBy passed. Must be one of {VALID_SORTS}'}),400
 
@@ -93,7 +96,42 @@ def get_posts():
     
     print(f"Direction: {direction}")
 
-    return Response(status=200)
+    #get matching posts
+    matched_posts = set() #use a set to automagically remove duplicates
+    for author_id in authorIds:
+        matched_posts.update(Post.get_posts_by_user_id(author_id))
+    matched_posts = list(matched_posts)
+
+    #sort matching posts using specified sort criteria and direction
+    def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
+        # adapted from 
+        # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
+        def quicksort(posts_to_sort):
+            if len(posts_to_sort) < 2:
+                return posts_to_sort
+
+            low, same, high = [], [], []
+
+            pivot = posts_to_sort[randint(0, len(posts_to_sort) - 1)]
+
+            for item in posts_to_sort:
+                if getattr(item, criteria) < getattr(pivot, criteria):
+                    low.append(item)
+                if getattr(item, criteria) == getattr(pivot, criteria):
+                    same.append(item)
+                if getattr(item, criteria) > getattr(pivot, criteria):
+                    high.append(item)
+
+            return quicksort(low) + same + quicksort(high)
+        
+        return quicksort(posts_to_sort)
+        
+    sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
+
+    if direction == "desc":
+        sorted_posts.reverse()
+
+    return jsonify({"posts": [i.serialize for i in sorted_posts]})
 
 @api.patch('/posts')
 @auth_required

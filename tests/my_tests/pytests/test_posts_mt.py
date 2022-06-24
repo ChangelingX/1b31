@@ -272,7 +272,7 @@ class TestSortBy:
         # reads
         # likes
         # popularity
-    def get_posts_sortBy_not_passed(self,client):
+    def test_get_posts_sortBy_not_passed(self,client):
         """
         Should return data sorted by id.
         """
@@ -282,9 +282,10 @@ class TestSortBy:
             "direction": "asc"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        print(json.dumps(response.json))
         assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_not_passed_expected_result, sort_keys=True)
     
-    def get_posts_sortBy_blank(self,client):
+    def test_get_posts_sortBy_blank(self,client):
         """
         should return data sorted by ID
         """
@@ -295,9 +296,9 @@ class TestSortBy:
             "direction": "asc"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_not_passed_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_blank_expected_result, sort_keys=True)
 
-    def get_posts_sortedBy_invalid(self,client):
+    def test_get_posts_sortedBy_invalid(self,client):
         """
         should return a 400 error.
         """
@@ -307,9 +308,11 @@ class TestSortBy:
             "sortBy":"invalid"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_invalid_expected_results, sort_keys=True)
+        print(json.dumps(response.json, sort_keys=True))
+        print(json.dumps(self.get_posts_sortBy_invalid_expected_result, sort_keys=True))
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_invalid_expected_result, sort_keys=True)
 
-    def get_posts_sortBy_id(self,client):
+    def test_get_posts_sortBy_id(self,client):
         """
         should return posts sorted by ID
         """
@@ -319,9 +322,9 @@ class TestSortBy:
             "sortBy":"id"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_id_expected_results, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_id_expected_result, sort_keys=True)
 
-    def get_posts_sortBy_reads(self,client):
+    def test_get_posts_sortBy_reads(self,client):
         """
         should return posts sorted by reads (views)
         """
@@ -331,9 +334,9 @@ class TestSortBy:
             "sortBy":"reads"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_reads_expected_results, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_reads_expected_result, sort_keys=True)
 
-    def get_posts_sortBy_likes(self,client):
+    def test_get_posts_sortBy_likes(self,client):
         """
         should return posts sorted by likes
         """
@@ -343,9 +346,9 @@ class TestSortBy:
             "sortBy":"likes"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_likes_expected_results, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_likes_expected_result, sort_keys=True)
 
-    def get_posts_sortBy_popularity(self,client):
+    def test_get_posts_sortBy_popularity(self,client):
         """
         should return posts sorted by popularity
         """
@@ -355,10 +358,10 @@ class TestSortBy:
             "sortBy":"popularity"
         }
         response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_popularity_expected_results, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_popularity_expected_result, sort_keys=True)
 
     # sortBy mock data
-    get_posts_sortBy_not_passed_expected_result = {
+    get_posts_sortBy_id_expected_result = {
         "posts": [
             {
                 "tags": ["food", "recipes", "baking"],
@@ -386,10 +389,11 @@ class TestSortBy:
             },
         ],
     }
-    get_posts_sortBy_blank_expected_result = get_posts_sortBy_not_passed_expected_result #same outcome
-    get_posts_sortBy_id_expected_result = get_posts_sortBy_not_passed_expected_result #same outcome
-    get_posts_sortBy_invalid_expected_results = {
-        "error":'Invalid sortBy passed. Must be one of ["id","reads","likes","popularity"]'
+
+    get_posts_sortBy_not_passed_expected_result = get_posts_sortBy_id_expected_result #same outcome
+    get_posts_sortBy_blank_expected_result = get_posts_sortBy_id_expected_result #same outcome
+    get_posts_sortBy_invalid_expected_result = {
+        "error":"Invalid sortBy passed. Must be one of ['id', 'reads', 'likes', 'popularity']"
     }
     get_posts_sortBy_reads_expected_result = {
         "posts": [
