@@ -20,7 +20,6 @@ class TestAuthentication:
         response = client.get(
             "/api/posts", headers={"x-access-token": token}, query_string=query_params
         )
-        print(response.json)
         assert response.status == "200 OK"
 
     def test_get_posts_unauthenticated(self, client):

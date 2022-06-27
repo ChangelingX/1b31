@@ -105,6 +105,7 @@ def get_posts():
     matched_posts = list(matched_posts)
 
     #sort matching posts using specified sort criteria and direction
+    #TODO: THis needs its own tests
     def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
 
         def compare(this, that, criteria):
@@ -143,16 +144,30 @@ def get_posts():
         return quicksort(posts_to_sort)
 
     if len(matched_posts) == 0:
-        return jsonify({"no results":"There were no posts matching the criteria submitted."})
+        return jsonify({"no results":"There were no posts matching the criteria submitted."}),200
         
     sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
 
     if direction == "desc":
         sorted_posts.reverse()
 
-    return jsonify({"posts": [i.serialize for i in sorted_posts]})
+    return jsonify({"posts": [i.serialize for i in sorted_posts]}),200
 
-@api.patch('/posts')
+@api.patch('/posts/<post_id>')
 @auth_required
-def update_posts():
+def update_posts(post_id):
+    """
+    Accepts a PATCH request accompanied by a json object.
+    The url /posts/<post_id/ field identifies which post to update.
+    The JSON object sent with the patch request determines which values of the post to update.
+    The PATCH request must be authenticated by a token from a user who is a listed author on the post.
+    All fields are optional, any not passed will not be changed.
+
+    :param post_id: (int) the numerical id of the post.
+    :param authorIds: list(int) a list of numerical author ids.
+    :param tags: list(str) a list of tags to apply to the post.
+    :param text: (str) the body of the post.
+    :returns: a JSON object of the updated post.
+    :returns: a JSON object containing an error code.
+    """
     pass
