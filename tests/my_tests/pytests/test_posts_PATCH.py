@@ -109,6 +109,38 @@ class TestAuthorIds:
         assert response.status == "200 SUCCESS"
         assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_authorids_blank_expected_result, sort_keys=True)
 
+    def test_authorids_empty_array(self,client):
+        """should return HTTP 200 w/ a JSON response with no changes to authorIds"""
+        token = make_token(1)
+        post_id = 1
+        data = {"authorIds":[]}
+        response = client.patch(
+            f"/api/posts/{post_id}",
+            headers={
+                "x-access-token": token,
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data),
+        )
+        assert response.status == "200 SUCCESS"
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_authorids_absent_expected_result, sort_keys=True)
+
+    def test_authorids_invalid(self,client):
+        """Should return a 406 code and a JSON error message"""
+        token = make_token(1)
+        post_id = 1
+        data = {"authorIds":"1,5"}
+        response = client.patch(
+            f"/api/posts/{post_id}",
+            headers={
+                "x-access-token": token,
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data),
+        )
+        assert response.status == "200 SUCCESS"
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_authorids_invalid_expected_result, sort_keys=True)
+
     def test_authorids_single_author(self,client):
         """should return HTTP 200 / a JSON with modified authorIds"""
         token = make_token(1)
@@ -174,6 +206,38 @@ class TestTags:
         assert response.status == "200 SUCCESS"
         assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_tags_blank_expected_result, sort_keys=True)
 
+    def test_tags_empty_array(self,client):
+        """Should return an HTTP 200 / a JSON with no changes to tags"""
+        token = make_token(1)
+        post_id = 1
+        data = {"tags": []}
+        response = client.patch(
+            f"/api/posts/{post_id}",
+            headers={
+                "x-access-token": token,
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data),
+        )
+        assert response.status == "200 SUCCESS"
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_tags_empty_array_expected_result, sort_keys=True)
+
+    def test_tags_invalid(self,client):
+        """Should return a HTTP 406 / a JSON error message."""
+        token = make_token(1)
+        post_id = 1
+        data = {"tags": "sports,music"}
+        response = client.patch(
+            f"/api/posts/{post_id}",
+            headers={
+                "x-access-token": token,
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data),
+        )
+        assert response.status == "200 SUCCESS"
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_tags_invalid_expected_result, sort_keys=True)
+
     def test_tags_single_tag(self,client):
         """should return a HTTP 200 / a json with new tag"""
         token = make_token(1)
@@ -238,6 +302,22 @@ class TestText:
         )
         assert response.status == "200 SUCCESS"
         assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_text_blank_expected_result, sort_keys=True)
+
+    def test_text_invalid(self,client):
+        """Should return a HTTP 406 / a json with error message"""
+        token = make_token(1)
+        post_id = 1
+        data = {"text": 1}
+        response = client.patch(
+            f"/api/posts/{post_id}",
+            headers={
+                "x-access-token": token,
+                "Content-Type": "application/json",
+            },
+            data=json.dumps(data),
+        )
+        assert response.status == "200 SUCCESS"
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.patch_text_invalid_expected_result, sort_keys=True)
 
     def test_text_present(self,client):
         """Should return a HTTP 200 / a json with changed to text"""
