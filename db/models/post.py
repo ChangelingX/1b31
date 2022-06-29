@@ -46,7 +46,22 @@ class Post(db.Model):
             "tags": self.tags
         }
 
+    def __str__(self):
+        self_str = "-----Post-----\n"+\
+                   f"ID: {self.id}\n"+\
+                   f"Text: {self.text}\n"+\
+                   f"Likes: {self.likes}\n"+\
+                   f"Reads: {self.reads}\n"+\
+                   f"Popularity: {self.popularity}\n"+\
+                   f"Tags: {self.tags}\n"+\
+                   f"Users: {self.users}"
+        return self_str
+
     @staticmethod
     def get_posts_by_user_id(user_id):
         user = User.query.get(user_id)
         return Post.query.with_parent(user).all()
+
+    @staticmethod
+    def get_post_by_post_id(post_id):
+        return Post.query.get(post_id)

@@ -2,6 +2,7 @@ from flask import jsonify, request, g, abort, Response
 from random import randint
 
 from api import api
+from db.models.user import User
 from db.shared import db
 from db.models.user_post import UserPost
 from db.models.post import Post
@@ -151,7 +152,7 @@ def get_posts():
     if direction == "desc":
         sorted_posts.reverse()
 
-    return jsonify({"posts": [i.serialize for i in sorted_posts]}),200
+    return jsonify({"posts": [i.serialize for i in sorted_posts]}),200 #i.serialize deduplicates the posts
 
 @api.patch('/posts/<post_id>')
 @auth_required
@@ -170,4 +171,55 @@ def update_posts(post_id):
     :returns: a JSON object of the updated post.
     :returns: a JSON object containing an error code.
     """
-    pass
+    # check for validation
+    user = g.get("user")
+    if user is None:
+        return abort(401)
+
+    # get post by ID
+    post = Post.get_post_by_post_id(post_id)
+    if post is None:
+        return jsonify({"error":f"Post with id {post_id} could not be found."}),404
+    
+    # confirm editor is an author on the post.
+    if not user.isAuthor(post):
+        return jsonify({"error":"Users may only edit their own posts using this API."}),401
+
+    # check passed variables for validity
+    print("request:", request, request.json)
+    data = request.json
+
+    # fields:
+    # authorIds
+    authorids = data["authorIds"]
+    if authorids is not None:
+        if len(authorids) == 0:
+            authorids = None
+        for authorid in authorids:
+            if not isinstance(authorid,int):
+                return jsonify({"error":f"The passed authorIds ({authorids}) is not of a valid data type. Expected array of ints. E.x. [1,4]"}),400
+            # confirm each authorId corresponds to an existing User
+            if User.query.get(authorid) is None:
+                return jsonify({"error":f"The used referenced by id ({authorid}) does not exist. Cannot add as author."}),400
+            
+    # tags
+    tags = data["tags"]
+    if tags is not None:
+        if len(tags) == 0: #blank
+            tags = None
+        if not isinstance(tags, list):  #confirm tags is a list of strings.
+            return jsonify({"error":"Must passs tags as an array of strings, [\"sports\",\"vacation\"]"}),400
+        else:
+            for tag in tags:
+                if not isinstance(tag,str):
+                    return jsonify({"error":"Must passs tags as an array of strings, [\"sports\",\"vacation\"]"}),400
+
+     
+    print(data["text"])
+        # absent
+        # invalid
+        # blank
+        # present
+
+    # make relevant changes
+    # return post by ID from database.

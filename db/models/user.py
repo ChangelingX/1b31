@@ -22,6 +22,11 @@ class User(db.Model):
     def correct_password(self, password):
         return bcrypt.checkpw(password.encode("utf-8"), self.password.encode("utf-8"))
 
+    def isAuthor(self, post):
+        if post in self.posts:
+            return True
+        else:
+            return False
 
 def create_salt():
     return bcrypt.gensalt()
