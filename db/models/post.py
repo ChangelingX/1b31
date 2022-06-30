@@ -31,20 +31,32 @@ class Post(db.Model):
             raise ValueError("Popularity should be between 0 and 1")
         return popularity
 
-    @property 
-    def serialize(self):
+    def serialize(self, withUsers = False):
         # adapted from
         # https://stackoverflow.com/questions/7102754/jsonify-a-sqlalchemy-result-set-in-flask
         """returns object in easily serialized (jsonify-able) format"""
-        return {
+        serialized = {
             "id" : self.id,
             "text": self.text,
             "likes": self.likes,
             "reads": self.reads,
             "popularity": self.popularity,
-            #"users": self.users,
-            "tags": self.tags
+            "tags": self.tags,
+            "users": self.users
         }
+
+        if withUsers:
+            user_ids = []
+            for user in self.users:
+                user_ids.append(user.id)
+            serialized["users"] = sorted(user_ids)
+
+        return serialized
+
+    @property
+    def serialize_with_users(self):
+        """returns object in easily serialized (jsonify-able format)"""
+
 
     def __str__(self):
         self_str = "-----Post-----\n"+\

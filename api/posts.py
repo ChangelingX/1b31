@@ -152,7 +152,7 @@ def get_posts():
     if direction == "desc":
         sorted_posts.reverse()
 
-    return jsonify({"posts": [i.serialize for i in sorted_posts]}),200 #i.serialize deduplicates the posts
+    return jsonify({"posts": [i.serialize() for i in sorted_posts]}),200 #i.serialize deduplicates the posts
 
 @api.patch('/posts/<post_id>')
 @auth_required
@@ -171,55 +171,76 @@ def update_posts(post_id):
     :returns: a JSON object of the updated post.
     :returns: a JSON object containing an error code.
     """
-    # check for validation
+    # check for user authentication
     user = g.get("user")
     if user is None:
         return abort(401)
 
-    # get post by ID
+    # get post by ID, verify it actually exists.
     post = Post.get_post_by_post_id(post_id)
     if post is None:
         return jsonify({"error":f"Post with id {post_id} could not be found."}),404
     
-    # confirm editor is an author on the post.
+    # confirm requestor of edit is an author on the post.
     if not user.isAuthor(post):
         return jsonify({"error":"Users may only edit their own posts using this API."}),401
 
-    # check passed variables for validity
     print("request:", request, request.json)
+    print("unmodified post:", post)
     data = request.json
 
-    # fields:
+    # Below: Extract variables from json data. Ignore variables with blank values.
+    
+    author_ids = tags = text = None
     # authorIds
-    authorids = data["authorIds"]
-    if authorids is not None:
-        if len(authorids) == 0:
-            authorids = None
-        for authorid in authorids:
-            if not isinstance(authorid,int):
-                return jsonify({"error":f"The passed authorIds ({authorids}) is not of a valid data type. Expected array of ints. E.x. [1,4]"}),400
-            # confirm each authorId corresponds to an existing User
-            if User.query.get(authorid) is None:
-                return jsonify({"error":f"The used referenced by id ({authorid}) does not exist. Cannot add as author."}),400
-            
+    if "authorIds" in data.keys():
+        author_ids = data["authorIds"]
+        if not isinstance(author_ids, list):
+            return jsonify({"error":"Must pass a list of integers for author_ids."}),400
+        if len(author_ids) == 0:
+            return jsonify({"error":"Cannot set author_ids to a blank list."}),400
+        for author_id in author_ids:
+            if not isinstance(author_id, int):
+                return jsonify({"error":f"Must pass a list of integers for authorIds. Got {author_ids}"}),400
+            if User.query.get(author_id) is None:
+                return jsonify({"error":f"The used referenced by id ({author_id}) does not exist. Cannot add as author."}),400
+
     # tags
-    tags = data["tags"]
+    if "tags" in data.keys():
+        tags = data["tags"]
+        if not isinstance(tags, list):
+            return jsonify({"error":f"Must pass a list of strings for tags. Got \"{tags}\""}),400
+        if len(tags) == 0:
+            return jsonify({"error":f"Cannot apply an empty set of tags. Got {tags}"}),400
+        for tag in tags:
+            if not isinstance(tag,str):
+                return jsonify({"error":f"Must pass a list of strings for tags. Got \"{tags}\""}),400
+            if len(tag) == 0:
+                return jsonify({"error":f"Cannot apply a zero-lenth tag. Got tag of \"{tag}\""}),400
+
+    # text
+    if "text" in data.keys():
+        text = data["text"]
+        if not isinstance(text, str):
+            return jsonify({"error":f"Must pass field 'text' as a string. Got {type(text)}"}),400
+        if len(text) == 0:
+            return jsonify({"error":"Cannot set text to a zero-length string."})
+
+    #actually do the changes needed now that all data is verified.
+    if author_ids is not None:
+        post.users = []
+        for a_id in author_ids:
+            user = User.query.get(a_id)
+            post.users.append(user)
+    
     if tags is not None:
-        if len(tags) == 0: #blank
-            tags = None
-        if not isinstance(tags, list):  #confirm tags is a list of strings.
-            return jsonify({"error":"Must passs tags as an array of strings, [\"sports\",\"vacation\"]"}),400
-        else:
-            for tag in tags:
-                if not isinstance(tag,str):
-                    return jsonify({"error":"Must passs tags as an array of strings, [\"sports\",\"vacation\"]"}),400
+        post.tags = tags
 
-     
-    print(data["text"])
-        # absent
-        # invalid
-        # blank
-        # present
+    if text is not None:
+        post.text = text
 
-    # make relevant changes
+    db.session.commit()
+
+    print("modified post:", post.serialize(withUsers = True))
     # return post by ID from database.
+    return jsonify({"post":post.serialize(withUsers = True)}),200
