@@ -28,6 +28,7 @@ class User(db.Model):
         else:
             return False
 
+
 def create_salt():
     return bcrypt.gensalt()
 

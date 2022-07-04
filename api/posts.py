@@ -10,7 +10,8 @@ from db.models.post import Post
 from db.utils import row_to_dict
 from middlewares import auth_required
 
-VALID_SORTS = ['id','reads','likes','popularity']
+VALID_SORTS = ["id", "reads", "likes", "popularity"]
+
 
 @api.post("/posts")
 @auth_required
@@ -41,13 +42,14 @@ def posts():
 
     return row_to_dict(post), 200
 
-@api.get('/posts')
+
+@api.get("/posts")
 @auth_required
 def get_posts():
     """
     Accepts a GET request. The query string specifies which criteria to consider when returning posts.
     Returns posts and their content as a JSON payload, with HTTPResponseCode.
-    
+
     :param authorIds: (str) Comma separated list of integers, as a string e.g. "1,5"
     :param sortBy: (str) field name to sort by. Options are "id, reads, likes, popularity. Default is "id".
     :param direction: (str) Sorting direction of results. Options are "asc" and "desc". Default is "asc".
@@ -61,46 +63,71 @@ def get_posts():
 
     args = request.args
 
-    # Checks that authorIds, sortBy, direction all conform to requirements. 
+    # Checks that authorIds, sortBy, direction all conform to requirements.
     # Returns 400 error and JSON error message otherwise.
 
     # confirm authorIds exists and contains a list of positive integers separated by commas.
     authorIds = args.get("authorIds")
     if authorIds is None:
-        return jsonify({"error":"Must specify at least 1 author Id as a positive integer."}),400
+        return (
+            jsonify(
+                {"error": "Must specify at least 1 author Id as a positive integer."}
+            ),
+            400,
+        )
     if len(authorIds) == 0:
-        return jsonify({"error":"Must provide at least one authorId to search for."}),400
+        return (
+            jsonify({"error": "Must provide at least one authorId to search for."}),
+            400,
+        )
     try:
-        authorIds = [int(x) for x in args.get("authorIds").split(",")] #split arg into an array of ints.
+        authorIds = [
+            int(x) for x in args.get("authorIds").split(",")
+        ]  # split arg into an array of ints.
     except ValueError:
-        return jsonify({"error":"All ids passed must be a positive integer. Integers must be separated by a comma. [,]"}),400
+        return (
+            jsonify(
+                {
+                    "error": "All ids passed must be a positive integer. Integers must be separated by a comma. [,]"
+                }
+            ),
+            400,
+        )
 
     print(f"authorIds: {authorIds}")
 
-    #default to "id", error if passed value not valid.
+    # default to "id", error if passed value not valid.
     sortBy = args.get("sortBy")
     if sortBy is None:
         sortBy = "id"
     if len(sortBy) == 0:
         sortBy = "id"
     if sortBy not in VALID_SORTS:
-        return jsonify({"error":f'Invalid sortBy passed. Must be one of {VALID_SORTS}'}),400
+        return (
+            jsonify({"error": f"Invalid sortBy passed. Must be one of {VALID_SORTS}"}),
+            400,
+        )
 
     print(f"Sort by: {sortBy}")
 
-    #default to ascending, error if passed value not valid.
-    direction = args.get("direction")  
+    # default to ascending, error if passed value not valid.
+    direction = args.get("direction")
     if direction is None:
         direction = "asc"
     if len(direction) == 0:
         direction = "asc"
-    if direction not in ["asc","desc"]:
-        return jsonify({"error":'Invalid sort order specified. Must be one of ["asc","desc"]'}),400
-    
+    if direction not in ["asc", "desc"]:
+        return (
+            jsonify(
+                {"error": 'Invalid sort order specified. Must be one of ["asc","desc"]'}
+            ),
+            400,
+        )
+
     print(f"Direction: {direction}")
 
     # get matching posts
-    matched_posts = set() #use a set to automagically remove duplicates
+    matched_posts = set()  # use a set to automagically remove duplicates
     for author_id in authorIds:
         matched_posts.update(Post.get_posts_by_user_id(author_id))
     matched_posts = list(matched_posts)
@@ -109,21 +136,20 @@ def get_posts():
     # This can probably be a part of the posts model
     # for this coding exercise it works here.
     def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
-
         def compare(this, that, criteria):
-            if getattr(this, criteria) < getattr(that,criteria):
+            if getattr(this, criteria) < getattr(that, criteria):
                 return -1
             if getattr(this, criteria) > getattr(that, criteria):
                 return 1
-            if getattr(this,criteria) == getattr(that,criteria):
-                if getattr(this,"id") < getattr(that,"id"):
+            if getattr(this, criteria) == getattr(that, criteria):
+                if getattr(this, "id") < getattr(that, "id"):
                     return -1
-                if getattr(this,"id") > getattr(that,"id"):
+                if getattr(this, "id") > getattr(that, "id"):
                     return 1
-                if getattr(this,"id") == getattr(that,"id"):
+                if getattr(this, "id") == getattr(that, "id"):
                     return 0
 
-        # adapted from 
+        # adapted from
         # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
         def quicksort(posts_to_sort):
             if len(posts_to_sort) < 2:
@@ -142,20 +168,26 @@ def get_posts():
                     high.append(item)
 
             return quicksort(low) + same + quicksort(high)
-        
+
         return quicksort(posts_to_sort)
 
     if len(matched_posts) == 0:
-        return jsonify({"no results":"There were no posts matching the criteria submitted."}),200
-        
+        return (
+            jsonify(
+                {"no results": "There were no posts matching the criteria submitted."}
+            ),
+            200,
+        )
+
     sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
 
     if direction == "desc":
         sorted_posts.reverse()
 
-    return jsonify({"posts": [i.serialize() for i in sorted_posts]}),200
+    return jsonify({"posts": [i.serialize() for i in sorted_posts]}), 200
 
-@api.patch('/posts/<post_id>')
+
+@api.patch("/posts/<post_id>")
 @auth_required
 def update_posts(post_id):
     """
@@ -180,61 +212,104 @@ def update_posts(post_id):
     # get post by ID, verify it actually exists.
     post = Post.get_post_by_post_id(post_id)
     if post is None:
-        return jsonify({"error":f"Post with id {post_id} could not be found."}),404
-    
+        return jsonify({"error": f"Post with id {post_id} could not be found."}), 404
+
     # confirm requestor of edit is an author on the post.
     if not user.isAuthor(post):
-        return jsonify({"error":"Users may only edit their own posts using this API."}),401
+        return (
+            jsonify({"error": "Users may only edit their own posts using this API."}),
+            401,
+        )
 
     print("request:", request, request.json)
     print("unmodified post\n", post)
     data = request.json
 
     # Below: Extract variables from json data. Ignore variables with blank values.
-    
+
     author_ids = tags = text = None
     # authorIds
     if "authorIds" in data.keys():
         author_ids = data["authorIds"]
         if not isinstance(author_ids, list):
-            return jsonify({"error":"Must pass a list of integers for author_ids."}),400
+            return (
+                jsonify({"error": "Must pass a list of integers for author_ids."}),
+                400,
+            )
         if len(author_ids) == 0:
-            return jsonify({"error":"Cannot set author_ids to a blank list."}),400
+            return jsonify({"error": "Cannot set author_ids to a blank list."}), 400
         for author_id in author_ids:
             if not isinstance(author_id, int):
-                return jsonify({"error":f"Must pass a list of integers for authorIds. Got {author_ids}"}),400
+                return (
+                    jsonify(
+                        {
+                            "error": f"Must pass a list of integers for authorIds. Got {author_ids}"
+                        }
+                    ),
+                    400,
+                )
             if User.query.get(author_id) is None:
-                return jsonify({"error":f"The used referenced by id ({author_id}) does not exist. Cannot add as author."}),400
+                return (
+                    jsonify(
+                        {
+                            "error": f"The used referenced by id ({author_id}) does not exist. Cannot add as author."
+                        }
+                    ),
+                    400,
+                )
 
     # tags
     if "tags" in data.keys():
         tags = data["tags"]
         if not isinstance(tags, list):
-            return jsonify({"error":f"Must pass a list of strings for tags. Got \"{tags}\""}),400
+            return (
+                jsonify(
+                    {"error": f'Must pass a list of strings for tags. Got "{tags}"'}
+                ),
+                400,
+            )
         if len(tags) == 0:
-            return jsonify({"error":f"Cannot apply an empty set of tags. Got {tags}"}),400
+            return (
+                jsonify({"error": f"Cannot apply an empty set of tags. Got {tags}"}),
+                400,
+            )
         for tag in tags:
-            if not isinstance(tag,str):
-                return jsonify({"error":f"Must pass a list of strings for tags. Got \"{tags}\""}),400
+            if not isinstance(tag, str):
+                return (
+                    jsonify(
+                        {"error": f'Must pass a list of strings for tags. Got "{tags}"'}
+                    ),
+                    400,
+                )
             if len(tag) == 0:
-                return jsonify({"error":f"Cannot apply a zero-lenth tag. Got tag of \"{tag}\""}),400
+                return (
+                    jsonify(
+                        {"error": f'Cannot apply a zero-lenth tag. Got tag of "{tag}"'}
+                    ),
+                    400,
+                )
 
     # text
     if "text" in data.keys():
         text = data["text"]
         if not isinstance(text, str):
-            return jsonify({"error":f"Must pass field 'text' as a string. Got {type(text)}"}),400
+            return (
+                jsonify(
+                    {"error": f"Must pass field 'text' as a string. Got {type(text)}"}
+                ),
+                400,
+            )
         if len(text) == 0:
-            return jsonify({"error":"Cannot set text to a zero-length string."})
+            return jsonify({"error": "Cannot set text to a zero-length string."})
 
-    #actually do the changes needed now that all data is verified.
+    # actually do the changes needed now that all data is verified.
     if author_ids is not None:
         UserPost.query.filter_by(post_id=post_id).delete()
         for a_id in author_ids:
             user = User.query.get(a_id)
-            db.session.add(UserPost(user_id=a_id,post_id=post_id))
+            db.session.add(UserPost(user_id=a_id, post_id=post_id))
         print("post within author_ids conditional:\n", post)
-    
+
     if tags is not None:
         post.tags = tags
 
@@ -247,6 +322,6 @@ def update_posts(post_id):
     post = Post.get_post_by_post_id(post_id)
     print("post after commit:\n", post)
 
-    print("Returned post:", post.serialize(withUsers = True))
+    print("Returned post:", post.serialize(withUsers=True))
     # return post by ID from database.
-    return jsonify({"post":post.serialize(withUsers = True)}),200
+    return jsonify({"post": post.serialize(withUsers=True)}), 200
