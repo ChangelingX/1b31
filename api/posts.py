@@ -187,7 +187,7 @@ def update_posts(post_id):
         return jsonify({"error":"Users may only edit their own posts using this API."}),401
 
     print("request:", request, request.json)
-    print("unmodified post:", post)
+    print("unmodified post\n", post)
     data = request.json
 
     # Below: Extract variables from json data. Ignore variables with blank values.
@@ -229,11 +229,10 @@ def update_posts(post_id):
 
     #actually do the changes needed now that all data is verified.
     if author_ids is not None:
-        new_users = []
+        UserPost.query.filter_by(post_id=post_id).delete()
         for a_id in author_ids:
             user = User.query.get(a_id)
-            new_users.append(user)
-        post.users = new_users
+            db.session.add(UserPost(user_id=a_id,post_id=post_id))
         print("post within author_ids conditional:\n", post)
     
     if tags is not None:
@@ -244,6 +243,8 @@ def update_posts(post_id):
 
     print("post after all conditionals:\n", post)
     db.session.commit()
+    db.session.refresh(post)
+    post = Post.get_post_by_post_id(post_id)
     print("post after commit:\n", post)
 
     print("Returned post:", post.serialize(withUsers = True))

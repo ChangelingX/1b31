@@ -219,7 +219,7 @@ class TestAuthorIds:
             'reads': 5, 
             'popularity': 0.19, 
             'tags': ['food', 'recipes', 'baking'],
-            'authorIds':[1,2]
+            'authorIds':[1,5]
         }
     }
 
@@ -537,7 +537,7 @@ class TestMultiChanges:
             'reads': 5, 
             'popularity': 0.19, 
             'tags': ['travel', 'vacation'],
-            'authorIds':[1,2]
+            'authorIds':[1,5]
             }
     }
 
@@ -550,7 +550,7 @@ class TestMultiChanges:
             'reads': 5, 
             'popularity': 0.19, 
             'tags': ['food', 'recipes', 'baking'],
-            'authorIds':[1,2]
+            'authorIds':[1,5]
         }
     }
 
@@ -576,6 +576,6 @@ class TestMultiChanges:
             "reads": 5, 
             "tags": ["travel", "vacation"], 
             "text": "my text",
-            'authorIds':[1,2]
+            'authorIds':[1,5]
         }
     }

@@ -66,7 +66,7 @@ class Post(db.Model):
                    f"Popularity: {self.popularity}\n"+\
                    f"Tags: {self.tags}\n"+\
                    f"Users: {self.users}\n"\
-                   "--------------\n"
+                   "--------------"
         return self_str
 
     @staticmethod
