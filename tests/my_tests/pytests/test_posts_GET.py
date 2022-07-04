@@ -2,12 +2,13 @@ import json
 from webbrowser import get
 from tests.utils import make_token
 
+
 class TestAuthentication:
     """
     This tests all of the authentication cases possible for the /api/posts module.
     """
 
-    # Authentication - 
+    # Authentication -
     # user is authenticated with a matching token
     # user is not authenticated - no token
     # user is not authenticated - invalid or expired token
@@ -16,7 +17,7 @@ class TestAuthentication:
         Should return a 200 response.
         """
         token = make_token(2)
-        query_params = {"authorIds":"2"}
+        query_params = {"authorIds": "2"}
         response = client.get(
             "/api/posts", headers={"x-access-token": token}, query_string=query_params
         )
@@ -27,25 +28,24 @@ class TestAuthentication:
         """
         Should return a 401 response.
         """
-        query_params = {"authorIds":"1"}
-        response = client.get(
-            "/api/posts", headers={}, query_string=query_params
-        )
+        query_params = {"authorIds": "1"}
+        response = client.get("/api/posts", headers={}, query_string=query_params)
         assert response.status == "401 UNAUTHORIZED"
 
     def test_get_posts_invalid_token(self, client):
         """
         should return a 401 response.
         """
-        query_params = {"authorIds":"1"}
+        query_params = {"authorIds": "1"}
         response = client.get(
-            "/api/posts", headers= {"x-access-token": ""}, query_string=query_params
+            "/api/posts", headers={"x-access-token": ""}, query_string=query_params
         )
         assert response.status == "401 UNAUTHORIZED"
 
+
 class TestAuthorIds:
-    
-    # AuthorsIds - 
+
+    # AuthorsIds -
     # ID field is not specified
     # ID value is blank
     # ID value is not valid format
@@ -62,78 +62,92 @@ class TestAuthorIds:
         Should return an error stating that author Ids must be specified.
         """
         token = make_token(1)
-        query_params = {
-            "sortBy": "id",
-            "direction": "asc"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_not_specified_expected_result, sort_keys=True)
-    
+        query_params = {"sortBy": "id", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_not_specified_expected_result, sort_keys=True
+        )
+
     def test_get_posts_authorIds_blank(self, client):
         """
         Should return an error stating that authorids must be specified.
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "",
-            "sortBy": "id",
-            "direction": "asc"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_blank_expected_result, sort_keys=True)
+        query_params = {"authorIds": "", "sortBy": "id", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_blank_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_authorIds_not_valid_format(self,client):
+    def test_get_posts_authorIds_not_valid_format(self, client):
         """
         should return an error stating that a passed id is not a valid int.
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "fred",
-            "sortBy": "id",
-            "direction": "asc"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_not_valid_format_expected_result, sort_keys=True)
+        query_params = {"authorIds": "fred", "sortBy": "id", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_not_valid_format_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_authorIds_one_id_no_match(self,client):
+    def test_get_posts_authorIds_one_id_no_match(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "4"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_one_id_no_match_expected_result, sort_keys=True)
+        query_params = {"authorIds": "4"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_one_id_no_match_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_authorIds_one_id_one_match(self,client):
+    def test_get_posts_authorIds_one_id_one_match(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "1"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_one_id_one_match_expected_result, sort_keys=True)
+        query_params = {"authorIds": "1"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_one_id_one_match_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_authorIds_one_id_multiple_match(self,client):
+    def test_get_posts_authorIds_one_id_multiple_match(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "2"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_one_id_multiple_match_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_one_id_multiple_match_expected_result,
+            sort_keys=True,
+        )
 
-    def test_get_posts_authorIds_multiple_ids_no_match(self,client):
+    def test_get_posts_authorIds_multiple_ids_no_match(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "4,5"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_no_match_expected_result, sort_keys=True)
+        query_params = {"authorIds": "4,5"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_multiple_ids_no_match_expected_result,
+            sort_keys=True,
+        )
 
-    def test_get_posts_authorIds_multiple_ids_one_match_no_shared_authors(self,client):
+    def test_get_posts_authorIds_multiple_ids_one_match_no_shared_authors(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "1,4"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result, sort_keys=True)
+        query_params = {"authorIds": "1,4"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result,
+            sort_keys=True,
+        )
 
     # can't be tested with data set provided.
     # def test_get_posts_authorIds_multiple_ids_one_match_shared_authors(self,client):
@@ -144,24 +158,34 @@ class TestAuthorIds:
     #     response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
     #     assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_mutliple_ids_one_match_shared_authors_expected_result, sort_keys=True)
 
-    def test_get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors(self,client):
+    def test_get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors(
+        self, client
+    ):
         token = make_token(1)
-        query_params = {
-            "authorIds": "1,3"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result , sort_keys=True)
+        query_params = {"authorIds": "1,3"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result,
+            sort_keys=True,
+        )
 
-    def test_get_posts_authorIds_multiple_ids_multiple_matches_shared_authors(self,client):
+    def test_get_posts_authorIds_multiple_ids_multiple_matches_shared_authors(
+        self, client
+    ):
         token = make_token(1)
-        query_params = {
-            "authorIds": "1,2"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result, sort_keys=True)
+        query_params = {"authorIds": "1,2"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result,
+            sort_keys=True,
+        )
 
     get_posts_authorIds_one_id_no_match_expected_result = {
-        "no results":"There were no posts matching the criteria submitted."
+        "no results": "There were no posts matching the criteria submitted."
     }
     get_posts_authorIds_one_id_one_match_expected_result = {
         "posts": [
@@ -203,8 +227,12 @@ class TestAuthorIds:
             },
         ],
     }
-    get_posts_authorIds_multiple_ids_no_match_expected_result = get_posts_authorIds_one_id_no_match_expected_result
-    get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result = get_posts_authorIds_one_id_one_match_expected_result
+    get_posts_authorIds_multiple_ids_no_match_expected_result = (
+        get_posts_authorIds_one_id_no_match_expected_result
+    )
+    get_posts_authorIds_multiple_ids_one_match_no_shared_authors_expected_result = (
+        get_posts_authorIds_one_id_one_match_expected_result
+    )
     get_posts_authorIds_multiple_ids_multiple_matches_no_shared_authors_expected_result = {
         "posts": [
             {
@@ -224,13 +252,13 @@ class TestAuthorIds:
                 "popularity": 0.7,
             },
             {
-                "id":4,
-                "text":"This is post 4",
-                "likes":50,
-                "reads":300,
-                "tags":["vacation", "spa"],
-                "popularity":0.4
-            }
+                "id": 4,
+                "text": "This is post 4",
+                "likes": 50,
+                "reads": 300,
+                "tags": ["vacation", "spa"],
+                "popularity": 0.4,
+            },
         ],
     }
     get_posts_authorIds_multiple_ids_multiple_matches_shared_authors_expected_result = {
@@ -262,111 +290,118 @@ class TestAuthorIds:
         ],
     }
     get_posts_authorIds_not_specified_expected_result = {
-        "error":"Must specify at least 1 author Id as a positive integer."
+        "error": "Must specify at least 1 author Id as a positive integer."
     }
     get_posts_authorIds_blank_expected_result = {
-        "error":"Must provide at least one authorId to search for."
+        "error": "Must provide at least one authorId to search for."
     }
     get_posts_authorIds_not_valid_format_expected_result = {
-        "error":"All ids passed must be a positive integer. Integers must be separated by a comma. [,]"
+        "error": "All ids passed must be a positive integer. Integers must be separated by a comma. [,]"
     }
+
 
 class TestSortBy:
     # no sortBy passed.
     # blank sortBy passed.
     # invalid sortBy passed.
     # valid sortBy passed.
-        # id
-        # reads
-        # likes
-        # popularity
-    def test_get_posts_sortBy_not_passed(self,client):
+    # id
+    # reads
+    # likes
+    # popularity
+    def test_get_posts_sortBy_not_passed(self, client):
         """
         Should return data sorted by id.
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "direction": "asc"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        query_params = {"authorIds": "2", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
         print(json.dumps(response.json))
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_not_passed_expected_result, sort_keys=True)
-    
-    def test_get_posts_sortBy_blank(self,client):
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_not_passed_expected_result, sort_keys=True
+        )
+
+    def test_get_posts_sortBy_blank(self, client):
         """
         should return data sorted by ID
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "",
-            "direction": "asc"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_blank_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_blank_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_sortedBy_invalid(self,client):
+    def test_get_posts_sortedBy_invalid(self, client):
         """
         should return a 400 error.
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy":"invalid"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
+        query_params = {"authorIds": "2", "sortBy": "invalid"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
         print(json.dumps(response.json, sort_keys=True))
         print(json.dumps(self.get_posts_sortBy_invalid_expected_result, sort_keys=True))
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_invalid_expected_result, sort_keys=True)
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_invalid_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_sortBy_id(self,client):
+    def test_get_posts_sortBy_id(self, client):
         """
         should return posts sorted by ID
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy":"id"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_id_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "id"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_id_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_sortBy_reads(self,client):
+    def test_get_posts_sortBy_reads(self, client):
         """
         should return posts sorted by reads (views)
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy":"reads"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_reads_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "reads"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_reads_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_sortBy_likes(self,client):
+    def test_get_posts_sortBy_likes(self, client):
         """
         should return posts sorted by likes
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy":"likes"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_likes_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "likes"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_likes_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_sortBy_popularity(self,client):
+    def test_get_posts_sortBy_popularity(self, client):
         """
         should return posts sorted by popularity
         """
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy":"popularity"
-        }
-        response = client.get("/api/posts", headers={"x-access-token": token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_sortBy_popularity_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "popularity"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_sortBy_popularity_expected_result, sort_keys=True
+        )
 
     # sortBy mock data
     get_posts_sortBy_id_expected_result = {
@@ -398,10 +433,14 @@ class TestSortBy:
         ],
     }
 
-    get_posts_sortBy_not_passed_expected_result = get_posts_sortBy_id_expected_result #same outcome
-    get_posts_sortBy_blank_expected_result = get_posts_sortBy_id_expected_result #same outcome
+    get_posts_sortBy_not_passed_expected_result = (
+        get_posts_sortBy_id_expected_result  # same outcome
+    )
+    get_posts_sortBy_blank_expected_result = (
+        get_posts_sortBy_id_expected_result  # same outcome
+    )
     get_posts_sortBy_invalid_expected_result = {
-        "error":"Invalid sortBy passed. Must be one of ['id', 'reads', 'likes', 'popularity']"
+        "error": "Invalid sortBy passed. Must be one of ['id', 'reads', 'likes', 'popularity']"
     }
     get_posts_sortBy_reads_expected_result = {
         "posts": [
@@ -428,7 +467,7 @@ class TestSortBy:
                 "likes": 104,
                 "reads": 200,
                 "popularity": 0.7,
-            }
+            },
         ],
     }
     get_posts_sortBy_likes_expected_result = {
@@ -456,10 +495,10 @@ class TestSortBy:
                 "likes": 104,
                 "reads": 200,
                 "popularity": 0.7,
-            }
+            },
         ],
     }
-    #secondary sort by ID
+    # secondary sort by ID
     get_posts_sortBy_popularity_expected_result = {
         "posts": [
             {
@@ -485,65 +524,66 @@ class TestSortBy:
                 "likes": 10,
                 "reads": 32,
                 "popularity": 0.7,
-            }
+            },
         ],
     }
 
+
 class TestDirection:
-    #No direction passed - asc
-    #blank direction passed - asc
-    #invalid direction passed - 400
-    #asc passed
-    #desc passed
-    def test_get_posts_direction_not_passed(self,client):
+    # No direction passed - asc
+    # blank direction passed - asc
+    # invalid direction passed - 400
+    # asc passed
+    # desc passed
+    def test_get_posts_direction_not_passed(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "id"
-        }
-        response = client.get('/api/posts', headers={"x-access-token":token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_direction_not_passed_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "id"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_direction_not_passed_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_direction_blank(self,client):
+    def test_get_posts_direction_blank(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "id",
-            "direction":""
-        }
-        response = client.get('/api/posts', headers={"x-access-token":token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_direction_blank_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "id", "direction": ""}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_direction_blank_expected_result, sort_keys=True
+        )
 
+    def test_get_posts_direction_invalid_option(self, client):
+        token = make_token(1)
+        query_params = {"authorIds": "2", "sortBy": "id", "direction": "invalid"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_direction_invalid_option_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_direction_invalid_option(self,client):
+    def test_get_posts_direction_asc(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "id",
-            "direction":"invalid"
-        }
-        response = client.get('/api/posts', headers={"x-access-token":token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_direction_invalid_option_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "id", "direction": "asc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_direction_asc_expected_result, sort_keys=True
+        )
 
-    def test_get_posts_direction_asc(self,client):
+    def test_get_posts_direction_desc(self, client):
         token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "id",
-            "direction":"asc"
-        }
-        response = client.get('/api/posts', headers={"x-access-token":token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_direction_asc_expected_result, sort_keys=True)
-    
-    def test_get_posts_direction_desc(self,client):
-        token = make_token(1)
-        query_params = {
-            "authorIds": "2",
-            "sortBy": "id",
-            "direction":"desc"
-        }
-        response = client.get('/api/posts', headers={"x-access-token":token}, query_string=query_params)
-        assert json.dumps(response.json, sort_keys=True) == json.dumps(self.get_posts_direction_desc_expected_result, sort_keys=True)
+        query_params = {"authorIds": "2", "sortBy": "id", "direction": "desc"}
+        response = client.get(
+            "/api/posts", headers={"x-access-token": token}, query_string=query_params
+        )
+        assert json.dumps(response.json, sort_keys=True) == json.dumps(
+            self.get_posts_direction_desc_expected_result, sort_keys=True
+        )
 
     # default case
     get_posts_direction_asc_expected_result = {
@@ -574,10 +614,12 @@ class TestDirection:
             },
         ],
     }
-    get_posts_direction_not_passed_expected_result = get_posts_direction_asc_expected_result
+    get_posts_direction_not_passed_expected_result = (
+        get_posts_direction_asc_expected_result
+    )
     get_posts_direction_blank_expected_result = get_posts_direction_asc_expected_result
     get_posts_direction_invalid_option_expected_result = {
-        "error":'Invalid sort order specified. Must be one of ["asc","desc"]'
+        "error": 'Invalid sort order specified. Must be one of ["asc","desc"]'
     }
     get_posts_direction_desc_expected_result = {
         "posts": [
@@ -604,6 +646,6 @@ class TestDirection:
                 "likes": 12,
                 "reads": 5,
                 "popularity": 0.19,
-            }
+            },
         ],
     }
