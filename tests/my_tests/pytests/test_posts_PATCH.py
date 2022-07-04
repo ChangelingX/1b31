@@ -185,7 +185,8 @@ class TestAuthorIds:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['food', 'recipes', 'baking']
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
         }
     }
     patch_authorids_empty_array_expected_result = {
@@ -206,10 +207,21 @@ class TestAuthorIds:
             'reads': 5, 
             'popularity': 0.19, 
             'tags': ['food', 'recipes', 'baking'],
-            'users': [1]
+            'authorIds': [1]
         }
     }
-    patch_authorids_multiple_authors_expected_result = {}
+    patch_authorids_multiple_authors_expected_result = {
+        "post":
+        {
+            'id': 1, 
+            'text': 'Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.', 
+            'likes': 12, 
+            'reads': 5, 
+            'popularity': 0.19, 
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
+        }
+    }
 
 class TestTags:
     def test_tags_absent(self,client):
@@ -317,7 +329,8 @@ class TestTags:
             'likes': 12, 
             'reads': 5,
             'popularity': 0.19, 
-            'tags': ['food', 'recipes', 'baking']
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
         }
     }
     patch_tags_blank_expected_result = {
@@ -337,7 +350,8 @@ class TestTags:
             'popularity': 0.19, 
             'reads': 5, 
             'tags': ['travel'], 
-            'text': 'Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.'
+            'text': 'Excepteur occaecat minim reprehenderit cupidatat dolore voluptate velit labore pariatur culpa esse mollit. Veniam ipsum amet eu dolor reprehenderit quis tempor pariatur labore. Tempor excepteur velit dolor commodo aute. Proident aute cillum dolor sint laborum tempor cillum voluptate minim. Amet qui eiusmod duis est labore cupidatat excepteur occaecat nulla.',
+            'authorIds':[1,2]
         }
     }
     patch_tags_multiple_tags_expected_result = {
@@ -348,7 +362,8 @@ class TestTags:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['travel', 'vacation']
+            'tags': ['travel', 'vacation'],
+            'authorIds':[1,2]
         }
     }
 
@@ -425,9 +440,13 @@ class TestText:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['food', 'recipes', 'baking']}
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
+        }
     }
-    patch_text_blank_expected_result = patch_text_absent_expected_result
+    patch_text_blank_expected_result = {
+        "error": "Cannot set text to a zero-length string."
+    }
     patch_text_invalid_expected_result = {
         "error": "Must pass field \'text\' as a string. Got <class \'int\'>"
     }
@@ -439,7 +458,8 @@ class TestText:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['food', 'recipes', 'baking']
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
         }
     }
 
@@ -516,7 +536,8 @@ class TestMultiChanges:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['travel', 'vacation']
+            'tags': ['travel', 'vacation'],
+            'authorIds':[1,2]
             }
     }
 
@@ -528,7 +549,8 @@ class TestMultiChanges:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['food', 'recipes', 'baking']
+            'tags': ['food', 'recipes', 'baking'],
+            'authorIds':[1,2]
         }
     }
 
@@ -540,7 +562,9 @@ class TestMultiChanges:
             'likes': 12, 
             'reads': 5, 
             'popularity': 0.19, 
-            'tags': ['travel', 'vacation']}
+            'tags': ['travel', 'vacation'],
+            'authorIds':[1,2]
+        }
     }
 
     patch_all_expected_result = {
@@ -551,6 +575,7 @@ class TestMultiChanges:
             "popularity": 0.19, 
             "reads": 5, 
             "tags": ["travel", "vacation"], 
-            "text": "my text"
+            "text": "my text",
+            'authorIds':[1,2]
         }
     }

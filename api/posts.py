@@ -99,14 +99,15 @@ def get_posts():
     
     print(f"Direction: {direction}")
 
-    #get matching posts
+    # get matching posts
     matched_posts = set() #use a set to automagically remove duplicates
     for author_id in authorIds:
         matched_posts.update(Post.get_posts_by_user_id(author_id))
     matched_posts = list(matched_posts)
 
-    #sort matching posts using specified sort criteria and direction
-    #TODO: THis needs its own tests
+    # sort matching posts using specified sort criteria and direction.
+    # This can probably be a part of the posts model
+    # for this coding exercise it works here.
     def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
 
         def compare(this, that, criteria):
@@ -152,7 +153,7 @@ def get_posts():
     if direction == "desc":
         sorted_posts.reverse()
 
-    return jsonify({"posts": [i.serialize() for i in sorted_posts]}),200 #i.serialize deduplicates the posts
+    return jsonify({"posts": [i.serialize() for i in sorted_posts]}),200
 
 @api.patch('/posts/<post_id>')
 @auth_required
@@ -228,10 +229,12 @@ def update_posts(post_id):
 
     #actually do the changes needed now that all data is verified.
     if author_ids is not None:
-        post.users = []
+        new_users = []
         for a_id in author_ids:
             user = User.query.get(a_id)
-            post.users.append(user)
+            new_users.append(user)
+        post.users = new_users
+        print("post within author_ids conditional:\n", post)
     
     if tags is not None:
         post.tags = tags
@@ -239,8 +242,10 @@ def update_posts(post_id):
     if text is not None:
         post.text = text
 
+    print("post after all conditionals:\n", post)
     db.session.commit()
+    print("post after commit:\n", post)
 
-    print("modified post:", post.serialize(withUsers = True))
+    print("Returned post:", post.serialize(withUsers = True))
     # return post by ID from database.
     return jsonify({"post":post.serialize(withUsers = True)}),200

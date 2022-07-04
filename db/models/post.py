@@ -41,15 +41,14 @@ class Post(db.Model):
             "likes": self.likes,
             "reads": self.reads,
             "popularity": self.popularity,
-            "tags": self.tags,
-            "users": self.users
+            "tags": self.tags
         }
 
         if withUsers:
             user_ids = []
             for user in self.users:
                 user_ids.append(user.id)
-            serialized["users"] = sorted(user_ids)
+            serialized["authorIds"] = sorted(user_ids)
 
         return serialized
 
@@ -66,7 +65,8 @@ class Post(db.Model):
                    f"Reads: {self.reads}\n"+\
                    f"Popularity: {self.popularity}\n"+\
                    f"Tags: {self.tags}\n"+\
-                   f"Users: {self.users}"
+                   f"Users: {self.users}\n"\
+                   "--------------\n"
         return self_str
 
     @staticmethod
