@@ -202,12 +202,10 @@ class TestAuthorIds:
             "authorIds": [1, 2],
         }
     }
-    patch_authorids_empty_array_expected_result = {
-        "error": "Cannot set author_ids to a blank list."
-    }
     patch_authorids_invalid_expected_result = {
         "error": "Must pass a list of integers for author_ids."
     }
+    patch_authorids_empty_array_expected_result =patch_authorids_invalid_expected_result
     patch_authorids_nonexistant_author_expected_result = {
         "error": "The used referenced by id (-1) does not exist. Cannot add as author."
     }
@@ -360,7 +358,7 @@ class TestTags:
         "error": 'Cannot apply a zero-lenth tag. Got tag of ""'
     }
     patch_tags_empty_array_expected_result = {
-        "error": "Cannot apply an empty set of tags. Got []"
+        "error": 'Must pass a list of strings for tags. Got "[]"'
     }
     patch_tags_invalid_expected_result = {
         "error": 'Must pass a list of strings for tags. Got "sports,music"'
@@ -387,7 +385,6 @@ class TestTags:
             "authorIds": [1, 2],
         }
     }
-
 
 class TestText:
     def test_text_absent(self, client):
@@ -421,7 +418,7 @@ class TestText:
             },
             data=json.dumps(data),
         )
-        assert response.status == "200 OK"
+        assert response.status == "400 BAD REQUEST"
         assert json.dumps(response.json, sort_keys=True) == json.dumps(
             self.patch_text_blank_expected_result, sort_keys=True
         )
@@ -474,10 +471,10 @@ class TestText:
         }
     }
     patch_text_blank_expected_result = {
-        "error": "Cannot set text to a zero-length string."
+        "error": "Must pass field 'text' as a string of non-zero length. Got <class 'str'>, "
     }
     patch_text_invalid_expected_result = {
-        "error": "Must pass field 'text' as a string. Got <class 'int'>"
+        "error": "Must pass field 'text' as a string of non-zero length. Got <class 'int'>, 1"
     }
     patch_text_present_expected_result = {
         "post": {
