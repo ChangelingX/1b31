@@ -104,58 +104,21 @@ def get_posts():
             400,
         )
 
-    #TODO: Compare by IDs rather than whole post.
-    matched_posts = set()  # use a set to automagically remove duplicates
+    matched_post_ids = set()  # use a set to automagically remove duplicates
     for author_id in authorIds:
-        matched_posts.update(Post.get_posts_by_user_id(author_id))
-    matched_posts = list(matched_posts)
-
-    # sort matching posts using specified sort criteria and direction.
-    # This can probably be a part of the posts model
-    # for this coding exercise it works here.
-    #TODO: use built in quicksort - https://www.techiedelight.com/sort-list-of-objects-by-multiple-attributes-python/
-    def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
-        def compare(this, that, criteria):
-            if getattr(this, criteria) < getattr(that, criteria):
-                return -1
-            if getattr(this, criteria) > getattr(that, criteria):
-                return 1
-            if getattr(this, criteria) == getattr(that, criteria):
-                if getattr(this, "id") < getattr(that, "id"):
-                    return -1
-                if getattr(this, "id") > getattr(that, "id"):
-                    return 1
-                if getattr(this, "id") == getattr(that, "id"):
-                    return 0
-
-        # adapted from
-        # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
-        def quicksort(posts_to_sort):
-            if len(posts_to_sort) < 2:
-                return posts_to_sort
-
-            low, same, high = [], [], []
-
-            pivot = posts_to_sort[randint(0, len(posts_to_sort) - 1)]
-
-            for item in posts_to_sort:
-                if compare(item, pivot, criteria) < 0:
-                    low.append(item)
-                if compare(item, pivot, criteria) == 0:
-                    same.append(item)
-                if compare(item, pivot, criteria) > 0:
-                    high.append(item)
-
-            return quicksort(low) + same + quicksort(high)
-
-        return quicksort(posts_to_sort)
+        a_id_matched_posts = Post.get_posts_by_user_id(author_id)
+        for post in a_id_matched_posts:
+            matched_post_ids.add(post.post_id)
+    matched_posts = []
+    for post_id in matched_post_ids:
+        matched_posts.append(Post.get_post_by_post_id(post_id))
 
     if len(matched_posts) == 0:
         return (
             jsonify(
                 {"no results": "There were no posts matching the criteria submitted."}
             ),
-            200,
+            404,
         )
 
     def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
@@ -174,8 +137,6 @@ def get_posts():
                 posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
         return posts_to_sort
 
-
-    # sorted_posts = sort_by_criteria(matched_posts, criteria=sortBy, direction=direction)
     sorted_posts = sort_by_criteria(matched_posts, sortBy, direction)
     print(sorted_posts)
 
@@ -205,7 +166,7 @@ def update_posts(post_id):
 
     post = Post.get_post_by_post_id(post_id)
     if post is None:
-        return jsonify({"error": f"Post with id {post_id} could not be found."}), 404
+        return jsonify({"error": f"Post with id {post_id} could not be found."}), 400
 
     if not user.isAuthor(post):
         return (
@@ -278,12 +239,24 @@ def update_posts(post_id):
                 400,
             )
 
-    #TODO: Compare new authors with existing and change based on union/disunion.
+    #TODO: Add / remove users as a batch
     if author_ids is not None:
-        UserPost.query.filter_by(post_id=post_id).delete()
-        for a_id in author_ids:
-            user = User.query.get(a_id)
-            db.session.add(UserPost(user_id=a_id, post_id=post_id))
+        # get existing author ids for post
+        # for each new author, check if they are present in the old list or not.
+        # if only present in old list, add to list to remove
+        # if present in only new list, add to list to add
+        old_userposts = UserPost.query.filter_by(post_id=post_id)
+        old_user_ids = []
+        for userpost in old_userposts:
+            old_user_ids.append(userpost.user_id)
+        users_to_remove = set(old_user_ids).difference(author_ids)
+        users_to_add = set(author_ids).difference(old_user_ids)
+        for user_rem in users_to_remove:
+            post_to_delete = UserPost.query.filter_by(user_id=user_rem, post_id=post_id).one()
+            db.session.delete(post_to_delete)
+        for user_add in users_to_add:
+            db.session.add(UserPost(user_id=user_add, post_id=post_id))
+
 
     if tags is not None:
         post.tags = tags

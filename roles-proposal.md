@@ -22,10 +22,17 @@ I would modify the user_post table to contain a Role field for each row. This wo
 
 I would then create a Role table which contained the Roles and their permissions. The permissions would be (C)reate, (R)ead, (U)pdate, (D)elete. Owners would have CRUD, Editors would have RU, viewers would only have R. This table would facilitate adding new roles and permissions as necessary, without requiring a change to legacy code as new roles or permissions were added.
 
-It may be appropriate to break own things like Update Users, Update Text, etc. for the Update role rather than having it be one monolithic permission.
+It may be appropriate to break out things like Update Users, Update Text, etc. for the Update role rather than having it be one monolithic permission.
 
 ### 2. How would you have to change the PATCH route [...]?
 
 When the user submits a request, rather than just confirming that the user was associated with the post, it would also confirm that the user has the appropriate permission (Update) in its Role relationship with the post for the given action. 
 
 For updating tags or text, the user would need to be in a role which had the Update value set. For updating Users, the user would need to have the Owner role associated (or would need to have the Update Users permission associated with their role).
+
+Possible edge cases include:
+
+1. A user trying to update a database entry that they are not authorized to modify at all - This would result in a 401 code being returned.
+2. A user trying to update a field of a database entry that they are not authorized to modify - this would also return a 401.
+3. A user trying to remove the last Owner of a post. This would need to return a 400 error to show that the request is malformed given the state of the database.
+4. A user trying to view a post they are not a Reader for. This would return a 401 forbidden error.
