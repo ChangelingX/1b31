@@ -158,30 +158,26 @@ def get_posts():
             200,
         )
 
-    # def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
-    #     if direction == "asc":
-    #         reverse = True
-    #     else:
-    #         reverse = False
-    #     match criteria:
-    #         case "id":
-    #             return posts_to_sort.sort(key=lambda x: (x.id), reverse=reverse)
-    #         case "reads":
-    #             return posts_to_sort.sort(key=lambda x: (x.reads, x.id), reverse=reverse)
-    #         case "likes":
-    #             return posts_to_sort.sort(key=lambda x: (x.likes, x.id), reverse=reverse)
-    #         case "popularity":
-    #             return posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
+    def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
+        if direction == "asc":
+            reverse = False
+        else:
+            reverse = True
+        match criteria:
+            case "id":
+                posts_to_sort.sort(key=lambda x: (x.id), reverse=reverse)
+            case "reads":
+                posts_to_sort.sort(key=lambda x: (x.reads, x.id), reverse=reverse)
+            case "likes":
+                posts_to_sort.sort(key=lambda x: (x.likes, x.id), reverse=reverse)
+            case "popularity":
+                posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
+        return posts_to_sort
 
 
-    # built_in_sorted_posts = matched_posts
-    # built_in_sorted_posts = sort_by_criteria(built_in_sorted_posts, criteria=sortBy, direction="asc")
-    # print(built_in_sorted_posts)
-    sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
-
-    #TODO: implement sorting in reverse rather than reversing the sorted array
-    if direction == "desc":
-        sorted_posts.reverse()
+    # sorted_posts = sort_by_criteria(matched_posts, criteria=sortBy, direction=direction)
+    sorted_posts = sort_by_criteria(matched_posts, sortBy, direction)
+    print(sorted_posts)
 
     return jsonify({"posts": [i.serialize() for i in sorted_posts]}), 200
 
