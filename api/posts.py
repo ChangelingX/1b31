@@ -1,5 +1,6 @@
 from flask import jsonify, request, g, abort, Response
 from random import randint
+from sqlalchemy import tuple_
 
 from api import api
 from db.models.user import User
@@ -71,9 +72,7 @@ def get_posts():
             400,
         )
     try:
-        authorIds = [
-            int(x) for x in args.get("authorIds").split(",")
-        ]
+        authorIds = [int(x) for x in args.get("authorIds").split(",")]
     except ValueError:
         return (
             jsonify(
@@ -105,13 +104,14 @@ def get_posts():
         )
 
     matched_post_ids = set()  # use a set to automagically remove duplicates
-    for author_id in authorIds:
-        a_id_matched_posts = Post.get_posts_by_user_id(author_id)
-        for post in a_id_matched_posts:
-            matched_post_ids.add(post.post_id)
-    matched_posts = []
-    for post_id in matched_post_ids:
-        matched_posts.append(Post.get_post_by_post_id(post_id))
+    bulk_matched_posts = (
+        db.session.query(UserPost).filter(UserPost.user_id.in_(authorIds)).all()
+    )
+
+    for post in bulk_matched_posts:
+        matched_post_ids.add(post.post_id)
+
+    matched_posts = db.session.query(Post).filter(Post.id.in_(matched_post_ids)).all()
 
     if len(matched_posts) == 0:
         return (
@@ -166,7 +166,7 @@ def update_posts(post_id):
 
     post = Post.get_post_by_post_id(post_id)
     if post is None:
-        return jsonify({"error": f"Post with id {post_id} could not be found."}), 400
+        return jsonify({"error": f"Post with id {post_id} could not be found."}), 404
 
     if not user.isAuthor(post):
         return (
@@ -234,29 +234,30 @@ def update_posts(post_id):
         if not isinstance(text, str) or len(text) == 0:
             return (
                 jsonify(
-                    {"error": f"Must pass field 'text' as a string of non-zero length. Got {type(text)}, {text}"}
+                    {
+                        "error": f"Must pass field 'text' as a string of non-zero length. Got {type(text)}, {text}"
+                    }
                 ),
                 400,
             )
 
-    #TODO: Add / remove users as a batch
     if author_ids is not None:
-        # get existing author ids for post
-        # for each new author, check if they are present in the old list or not.
-        # if only present in old list, add to list to remove
-        # if present in only new list, add to list to add
         old_userposts = UserPost.query.filter_by(post_id=post_id)
         old_user_ids = []
         for userpost in old_userposts:
             old_user_ids.append(userpost.user_id)
         users_to_remove = set(old_user_ids).difference(author_ids)
         users_to_add = set(author_ids).difference(old_user_ids)
-        for user_rem in users_to_remove:
-            post_to_delete = UserPost.query.filter_by(user_id=user_rem, post_id=post_id).one()
-            db.session.delete(post_to_delete)
-        for user_add in users_to_add:
-            db.session.add(UserPost(user_id=user_add, post_id=post_id))
 
+        db.session.query(UserPost).filter(UserPost.user_id.in_(users_to_remove)).filter(
+            UserPost.post_id == post_id
+        ).delete()
+
+        user_posts_to_add = []
+        for user_add in users_to_add:
+            user_posts_to_add.append(UserPost(user_id=user_add, post_id=post_id))
+
+        db.session.add_all(user_posts_to_add)
 
     if tags is not None:
         post.tags = tags

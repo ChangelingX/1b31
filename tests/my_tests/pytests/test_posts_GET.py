@@ -292,7 +292,9 @@ class TestAuthorIds:
     get_posts_authorIds_not_specified_expected_result = {
         "error": "Must specify at least 1 author Id as a positive integer."
     }
-    get_posts_authorIds_blank_expected_result = get_posts_authorIds_not_specified_expected_result
+    get_posts_authorIds_blank_expected_result = (
+        get_posts_authorIds_not_specified_expected_result
+    )
     get_posts_authorIds_not_valid_format_expected_result = {
         "error": "All ids passed must be a positive integer. Integers must be separated by a comma. [,]"
     }
