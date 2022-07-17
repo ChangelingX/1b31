@@ -1,5 +1,6 @@
 from flask import jsonify, request, g, abort, Response
 from random import randint
+from sqlalchemy import tuple_
 
 from api import api
 from db.models.user import User
@@ -71,9 +72,7 @@ def get_posts():
             400,
         )
     try:
-        authorIds = [
-            int(x) for x in args.get("authorIds").split(",")
-        ]
+        authorIds = [int(x) for x in args.get("authorIds").split(",")]
     except ValueError:
         return (
             jsonify(
@@ -104,84 +103,42 @@ def get_posts():
             400,
         )
 
-    #TODO: Compare by IDs rather than whole post.
-    matched_posts = set()  # use a set to automagically remove duplicates
-    for author_id in authorIds:
-        matched_posts.update(Post.get_posts_by_user_id(author_id))
-    matched_posts = list(matched_posts)
+    matched_post_ids = set()  # use a set to automagically remove duplicates
+    bulk_matched_posts = (
+        db.session.query(UserPost).filter(UserPost.user_id.in_(authorIds)).all()
+    )
 
-    # sort matching posts using specified sort criteria and direction.
-    # This can probably be a part of the posts model
-    # for this coding exercise it works here.
-    #TODO: use built in quicksort - https://www.techiedelight.com/sort-list-of-objects-by-multiple-attributes-python/
-    def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
-        def compare(this, that, criteria):
-            if getattr(this, criteria) < getattr(that, criteria):
-                return -1
-            if getattr(this, criteria) > getattr(that, criteria):
-                return 1
-            if getattr(this, criteria) == getattr(that, criteria):
-                if getattr(this, "id") < getattr(that, "id"):
-                    return -1
-                if getattr(this, "id") > getattr(that, "id"):
-                    return 1
-                if getattr(this, "id") == getattr(that, "id"):
-                    return 0
+    for post in bulk_matched_posts:
+        matched_post_ids.add(post.post_id)
 
-        # adapted from
-        # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
-        def quicksort(posts_to_sort):
-            if len(posts_to_sort) < 2:
-                return posts_to_sort
-
-            low, same, high = [], [], []
-
-            pivot = posts_to_sort[randint(0, len(posts_to_sort) - 1)]
-
-            for item in posts_to_sort:
-                if compare(item, pivot, criteria) < 0:
-                    low.append(item)
-                if compare(item, pivot, criteria) == 0:
-                    same.append(item)
-                if compare(item, pivot, criteria) > 0:
-                    high.append(item)
-
-            return quicksort(low) + same + quicksort(high)
-
-        return quicksort(posts_to_sort)
+    matched_posts = db.session.query(Post).filter(Post.id.in_(matched_post_ids)).all()
 
     if len(matched_posts) == 0:
         return (
             jsonify(
                 {"no results": "There were no posts matching the criteria submitted."}
             ),
-            200,
+            404,
         )
 
-    # def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
-    #     if direction == "asc":
-    #         reverse = True
-    #     else:
-    #         reverse = False
-    #     match criteria:
-    #         case "id":
-    #             return posts_to_sort.sort(key=lambda x: (x.id), reverse=reverse)
-    #         case "reads":
-    #             return posts_to_sort.sort(key=lambda x: (x.reads, x.id), reverse=reverse)
-    #         case "likes":
-    #             return posts_to_sort.sort(key=lambda x: (x.likes, x.id), reverse=reverse)
-    #         case "popularity":
-    #             return posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
+    def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
+        if direction == "asc":
+            reverse = False
+        else:
+            reverse = True
+        match criteria:
+            case "id":
+                posts_to_sort.sort(key=lambda x: (x.id), reverse=reverse)
+            case "reads":
+                posts_to_sort.sort(key=lambda x: (x.reads, x.id), reverse=reverse)
+            case "likes":
+                posts_to_sort.sort(key=lambda x: (x.likes, x.id), reverse=reverse)
+            case "popularity":
+                posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
+        return posts_to_sort
 
-
-    # built_in_sorted_posts = matched_posts
-    # built_in_sorted_posts = sort_by_criteria(built_in_sorted_posts, criteria=sortBy, direction="asc")
-    # print(built_in_sorted_posts)
-    sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
-
-    #TODO: implement sorting in reverse rather than reversing the sorted array
-    if direction == "desc":
-        sorted_posts.reverse()
+    sorted_posts = sort_by_criteria(matched_posts, sortBy, direction)
+    print(sorted_posts)
 
     return jsonify({"posts": [i.serialize() for i in sorted_posts]}), 200
 
@@ -277,17 +234,30 @@ def update_posts(post_id):
         if not isinstance(text, str) or len(text) == 0:
             return (
                 jsonify(
-                    {"error": f"Must pass field 'text' as a string of non-zero length. Got {type(text)}, {text}"}
+                    {
+                        "error": f"Must pass field 'text' as a string of non-zero length. Got {type(text)}, {text}"
+                    }
                 ),
                 400,
             )
 
-    #TODO: Compare new authors with existing and change based on union/disunion.
     if author_ids is not None:
-        UserPost.query.filter_by(post_id=post_id).delete()
-        for a_id in author_ids:
-            user = User.query.get(a_id)
-            db.session.add(UserPost(user_id=a_id, post_id=post_id))
+        old_userposts = UserPost.query.filter_by(post_id=post_id)
+        old_user_ids = []
+        for userpost in old_userposts:
+            old_user_ids.append(userpost.user_id)
+        users_to_remove = set(old_user_ids).difference(author_ids)
+        users_to_add = set(author_ids).difference(old_user_ids)
+
+        db.session.query(UserPost).filter(UserPost.user_id.in_(users_to_remove)).filter(
+            UserPost.post_id == post_id
+        ).delete()
+
+        user_posts_to_add = []
+        for user_add in users_to_add:
+            user_posts_to_add.append(UserPost(user_id=user_add, post_id=post_id))
+
+        db.session.add_all(user_posts_to_add)
 
     if tags is not None:
         post.tags = tags

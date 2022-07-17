@@ -205,7 +205,9 @@ class TestAuthorIds:
     patch_authorids_invalid_expected_result = {
         "error": "Must pass a list of integers for author_ids."
     }
-    patch_authorids_empty_array_expected_result =patch_authorids_invalid_expected_result
+    patch_authorids_empty_array_expected_result = (
+        patch_authorids_invalid_expected_result
+    )
     patch_authorids_nonexistant_author_expected_result = {
         "error": "The used referenced by id (-1) does not exist. Cannot add as author."
     }
@@ -385,6 +387,7 @@ class TestTags:
             "authorIds": [1, 2],
         }
     }
+
 
 class TestText:
     def test_text_absent(self, client):

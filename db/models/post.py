@@ -25,6 +25,10 @@ class Post(db.Model):
     def tags(self, tags):
         self._tags = ",".join(tags)
 
+    @property
+    def post_id(self):
+        return self.id
+
     @validates("popularity")
     def validate_popularity(self, key, popularity) -> str:
         if popularity > 1.0 or popularity < 0.0:
