@@ -1,5 +1,6 @@
 from flask import jsonify, request, g, abort, Response
 from random import randint
+from sqlalchemy import tuple_
 
 from api import api
 from db.models.user import User
@@ -56,34 +57,22 @@ def get_posts():
     :returns: JSON object in the format {"posts":{"id":(int),"likes":(int),"popularity":(float),"reads":(int),"tags":[(str),(str),[...]],"text":(str)},[...]}, HTTPResponseCode
     :returns: JSON object in the format {"error":"<error message"}
     """
-    # check for validation
     user = g.get("user")
     if user is None:
         return abort(401)
 
     args = request.args
 
-    # Checks that authorIds, sortBy, direction all conform to requirements.
-    # Returns 400 error and JSON error message otherwise.
-
-    # confirm authorIds exists and contains a list of positive integers separated by commas.
     authorIds = args.get("authorIds")
-    if authorIds is None:
+    if authorIds is None or len(authorIds) == 0:
         return (
             jsonify(
                 {"error": "Must specify at least 1 author Id as a positive integer."}
             ),
             400,
         )
-    if len(authorIds) == 0:
-        return (
-            jsonify({"error": "Must provide at least one authorId to search for."}),
-            400,
-        )
     try:
-        authorIds = [
-            int(x) for x in args.get("authorIds").split(",")
-        ]  # split arg into an array of ints.
+        authorIds = [int(x) for x in args.get("authorIds").split(",")]
     except ValueError:
         return (
             jsonify(
@@ -94,13 +83,8 @@ def get_posts():
             400,
         )
 
-    print(f"authorIds: {authorIds}")
-
-    # default to "id", error if passed value not valid.
     sortBy = args.get("sortBy")
-    if sortBy is None:
-        sortBy = "id"
-    if len(sortBy) == 0:
+    if sortBy is None or len(sortBy) == 0:
         sortBy = "id"
     if sortBy not in VALID_SORTS:
         return (
@@ -108,13 +92,8 @@ def get_posts():
             400,
         )
 
-    print(f"Sort by: {sortBy}")
-
-    # default to ascending, error if passed value not valid.
     direction = args.get("direction")
-    if direction is None:
-        direction = "asc"
-    if len(direction) == 0:
+    if direction is None or len(direction) == 0:
         direction = "asc"
     if direction not in ["asc", "desc"]:
         return (
@@ -124,65 +103,42 @@ def get_posts():
             400,
         )
 
-    print(f"Direction: {direction}")
+    matched_post_ids = set()  # use a set to automagically remove duplicates
+    bulk_matched_posts = (
+        db.session.query(UserPost).filter(UserPost.user_id.in_(authorIds)).all()
+    )
 
-    # get matching posts
-    matched_posts = set()  # use a set to automagically remove duplicates
-    for author_id in authorIds:
-        matched_posts.update(Post.get_posts_by_user_id(author_id))
-    matched_posts = list(matched_posts)
+    for post in bulk_matched_posts:
+        matched_post_ids.add(post.post_id)
 
-    # sort matching posts using specified sort criteria and direction.
-    # This can probably be a part of the posts model
-    # for this coding exercise it works here.
-    def sort_posts_by_criteria(posts_to_sort, criteria) -> list:
-        def compare(this, that, criteria):
-            if getattr(this, criteria) < getattr(that, criteria):
-                return -1
-            if getattr(this, criteria) > getattr(that, criteria):
-                return 1
-            if getattr(this, criteria) == getattr(that, criteria):
-                if getattr(this, "id") < getattr(that, "id"):
-                    return -1
-                if getattr(this, "id") > getattr(that, "id"):
-                    return 1
-                if getattr(this, "id") == getattr(that, "id"):
-                    return 0
-
-        # adapted from
-        # https://realpython.com/sorting-algorithms-python/#the-quicksort-algorithm-in-python
-        def quicksort(posts_to_sort):
-            if len(posts_to_sort) < 2:
-                return posts_to_sort
-
-            low, same, high = [], [], []
-
-            pivot = posts_to_sort[randint(0, len(posts_to_sort) - 1)]
-
-            for item in posts_to_sort:
-                if compare(item, pivot, criteria) < 0:
-                    low.append(item)
-                if compare(item, pivot, criteria) == 0:
-                    same.append(item)
-                if compare(item, pivot, criteria) > 0:
-                    high.append(item)
-
-            return quicksort(low) + same + quicksort(high)
-
-        return quicksort(posts_to_sort)
+    matched_posts = db.session.query(Post).filter(Post.id.in_(matched_post_ids)).all()
 
     if len(matched_posts) == 0:
         return (
             jsonify(
                 {"no results": "There were no posts matching the criteria submitted."}
             ),
-            200,
+            404,
         )
 
-    sorted_posts = sort_posts_by_criteria(matched_posts, sortBy)
+    def sort_by_criteria(posts_to_sort, criteria="id", direction="asc"):
+        if direction == "asc":
+            reverse = False
+        else:
+            reverse = True
+        match criteria:
+            case "id":
+                posts_to_sort.sort(key=lambda x: (x.id), reverse=reverse)
+            case "reads":
+                posts_to_sort.sort(key=lambda x: (x.reads, x.id), reverse=reverse)
+            case "likes":
+                posts_to_sort.sort(key=lambda x: (x.likes, x.id), reverse=reverse)
+            case "popularity":
+                posts_to_sort.sort(key=lambda x: (x.popularity, x.id), reverse=reverse)
+        return posts_to_sort
 
-    if direction == "desc":
-        sorted_posts.reverse()
+    sorted_posts = sort_by_criteria(matched_posts, sortBy, direction)
+    print(sorted_posts)
 
     return jsonify({"posts": [i.serialize() for i in sorted_posts]}), 200
 
@@ -204,40 +160,30 @@ def update_posts(post_id):
     :returns: a JSON object of the updated post.
     :returns: a JSON object containing an error code.
     """
-    # check for user authentication
     user = g.get("user")
     if user is None:
         return abort(401)
 
-    # get post by ID, verify it actually exists.
     post = Post.get_post_by_post_id(post_id)
     if post is None:
         return jsonify({"error": f"Post with id {post_id} could not be found."}), 404
 
-    # confirm requestor of edit is an author on the post.
     if not user.isAuthor(post):
         return (
             jsonify({"error": "Users may only edit their own posts using this API."}),
             401,
         )
-
-    print("request:", request, request.json)
-    print("unmodified post\n", post)
     data = request.json
 
-    # Below: Extract variables from json data. Ignore variables with blank values.
-
     author_ids = tags = text = None
-    # authorIds
+
     if "authorIds" in data.keys():
         author_ids = data["authorIds"]
-        if not isinstance(author_ids, list):
+        if not isinstance(author_ids, list) or len(author_ids) == 0:
             return (
                 jsonify({"error": "Must pass a list of integers for author_ids."}),
                 400,
             )
-        if len(author_ids) == 0:
-            return jsonify({"error": "Cannot set author_ids to a blank list."}), 400
         for author_id in author_ids:
             if not isinstance(author_id, int):
                 return (
@@ -258,19 +204,13 @@ def update_posts(post_id):
                     400,
                 )
 
-    # tags
     if "tags" in data.keys():
         tags = data["tags"]
-        if not isinstance(tags, list):
+        if not isinstance(tags, list) or len(tags) == 0:
             return (
                 jsonify(
                     {"error": f'Must pass a list of strings for tags. Got "{tags}"'}
                 ),
-                400,
-            )
-        if len(tags) == 0:
-            return (
-                jsonify({"error": f"Cannot apply an empty set of tags. Got {tags}"}),
                 400,
             )
         for tag in tags:
@@ -289,26 +229,35 @@ def update_posts(post_id):
                     400,
                 )
 
-    # text
     if "text" in data.keys():
         text = data["text"]
-        if not isinstance(text, str):
+        if not isinstance(text, str) or len(text) == 0:
             return (
                 jsonify(
-                    {"error": f"Must pass field 'text' as a string. Got {type(text)}"}
+                    {
+                        "error": f"Must pass field 'text' as a string of non-zero length. Got {type(text)}, {text}"
+                    }
                 ),
                 400,
             )
-        if len(text) == 0:
-            return jsonify({"error": "Cannot set text to a zero-length string."})
 
-    # actually do the changes needed now that all data is verified.
     if author_ids is not None:
-        UserPost.query.filter_by(post_id=post_id).delete()
-        for a_id in author_ids:
-            user = User.query.get(a_id)
-            db.session.add(UserPost(user_id=a_id, post_id=post_id))
-        print("post within author_ids conditional:\n", post)
+        old_userposts = UserPost.query.filter_by(post_id=post_id)
+        old_user_ids = []
+        for userpost in old_userposts:
+            old_user_ids.append(userpost.user_id)
+        users_to_remove = set(old_user_ids).difference(author_ids)
+        users_to_add = set(author_ids).difference(old_user_ids)
+
+        db.session.query(UserPost).filter(UserPost.user_id.in_(users_to_remove)).filter(
+            UserPost.post_id == post_id
+        ).delete()
+
+        user_posts_to_add = []
+        for user_add in users_to_add:
+            user_posts_to_add.append(UserPost(user_id=user_add, post_id=post_id))
+
+        db.session.add_all(user_posts_to_add)
 
     if tags is not None:
         post.tags = tags
@@ -316,12 +265,8 @@ def update_posts(post_id):
     if text is not None:
         post.text = text
 
-    print("post after all conditionals:\n", post)
     db.session.commit()
     db.session.refresh(post)
     post = Post.get_post_by_post_id(post_id)
-    print("post after commit:\n", post)
 
-    print("Returned post:", post.serialize(withUsers=True))
-    # return post by ID from database.
     return jsonify({"post": post.serialize(withUsers=True)}), 200
